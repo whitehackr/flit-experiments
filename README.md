@@ -189,16 +189,6 @@ flit-experiments/
 │   ├── risk_assessment.py         # Business risk evaluation
 │   └── reporting.py               # Executive summaries & dashboards
 │
-├── visualization/                  # Data Visualization & Communication
-│   ├── experiment_plots.py        # Statistical charts & confidence intervals
-│   ├── business_dashboards.py     # Executive reporting visualizations
-│   └── exploratory_analysis.py    # Ad-hoc investigation tools
-│
-├── results/                        # Experiment Results & Documentation
-│   ├── experiment_reports/         # Detailed analysis reports
-│   ├── business_decisions/         # Launch decisions & rationale
-│   └── learnings/                  # Insights & methodology improvements
-│
 ├── tests/                          # Testing & Validation
 │   ├── test_power_analysis.py     # Statistical calculation validation
 │   ├── test_experiment_logic.py   # Business logic testing
