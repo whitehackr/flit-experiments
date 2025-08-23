@@ -1,0 +1,112 @@
+# pyproject.toml
+# Modern Python packaging configuration - the new standard way to configure Python packages (vs setup.py)
+# This file is read by pip, build tools, and IDEs to understand the project structure
+
+# Build system requirements: tools needed to build the package
+[build-system]
+requires = [
+    "setuptools>=61.0",  
+    "wheel",             
+]
+build-backend = "setuptools.build_meta"
+
+# Project metadata - alternative to setup.py (we're using both for compatibility)
+[project]
+name = "flit-experiment-configs"
+version = "1.0.0"
+description = "Experiment configuration package for Flit's A/B testing platform"
+readme = "README.md"
+authors = [
+    {name = "Kevin Waithaka", email = "kevwaithakam@gmail.com"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers", 
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+requires-python = ">=3.9"
+
+# Dependencies
+dependencies = [
+    "pyyaml>=6.0",
+    "pydantic>=1.10.0",
+]
+
+# Optional dependencies - same as extras_require in setup.py
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0", 
+    "mypy>=0.950",
+]
+
+# Tool configurations - Instead of separate config files, we configure all tools here
+[tool.black]
+# Black code formatter configuration
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories to exclude from formatting
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+# Import sorting configuration (works with black)
+profile = "black"
+multi_line_output = 3
+line_length = 88
+include_trailing_comma = true
+
+[tool.mypy]
+# Type checking configuration
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+# Ignore missing imports for external libraries that don't have type stubs
+[[tool.mypy.overrides]]
+module = [
+    "yaml.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+# Test configuration
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",                    # Verbose output
+    "--tb=short",           # Shorter traceback format
+    "--strict-markers",     # Only allow defined markers
+    "--disable-warnings",   # Clean test output
+]
+
+# Test markers - for categorizing tests
+markers = [
+    "unit: Unit tests that run quickly and don't need external dependencies",
+    "integration: Integration tests that may need external services",
+    "slow: Tests that take a long time to run",
+]

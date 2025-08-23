@@ -1,0 +1,374 @@
+# Experiment Configuration Specifications - Single Source of Truth
+# 
+# This file defines all experiment parameters in a structured, validated format.
+# Each experiment contains complete specifications for:
+# - Business context and hypothesis
+# - Statistical requirements (power analysis)
+# - Population definition and eligibility
+# - Treatment variants and implementation
+# - Success metrics and guardrails
+#
+# Design Principles:
+# 1. Hypothesis-driven: Every experiment starts with a clear business hypothesis
+# 2. Statistical rigor: Proper power analysis drives sample size requirements
+# 3. Business safety: Guardrail metrics protect against negative outcomes
+# 4. Reproducibility: Complete specifications enable exact replication
+
+experiments:
+  
+  # =====================================================================================
+  # EXPERIMENT 1: Free Shipping Threshold Optimization
+  # =====================================================================================
+  # Business Context: Free shipping is the #1 factor in e-commerce purchase decisions
+  # Strategic Goal: Optimize the balance between conversion rate and shipping costs
+  # Risk Level: Medium (potential margin impact but significant volume opportunity)
+  # =====================================================================================
+  
+  free_shipping_threshold_test:
+    
+    # === BUSINESS CONTEXT & STRATEGY ===
+    business_justification: >
+      Free shipping is cited by 87% of consumers as the most important factor in 
+      purchase decisions. Current $50 threshold may be too high, causing cart 
+      abandonment. Reducing to $35 could increase conversion while maintaining 
+      acceptable unit economics. This test directly impacts Q1 revenue targets.
+    
+    risk_assessment: >
+      MEDIUM RISK: Potential 5-10% margin impact if AOV decreases significantly. 
+      However, volume increases should offset margin compression. Easily reversible 
+      if results are negative. No customer experience or brand risk.
+    
+    strategic_importance: >
+      Primary revenue driver test for Q1. Tests fundamental pricing psychology 
+      and price elasticity in our customer base. Results will inform broader 
+      pricing strategy and customer acquisition costs.
+    
+    # === HYPOTHESIS FRAMEWORK ===
+    # Primary hypothesis drives the statistical design and success criteria
+    # Secondary hypotheses help understand trade-offs and unintended consequences
+
+    hypothesis:
+      primary: >
+        Reducing free shipping threshold from $50 to $35 will increase conversion 
+        rate by 8% relative (4.5% → 4.86%) due to reduced purchase friction
+      
+      secondary:
+        - >
+          Average order value will decrease by less than 5% as customers optimize 
+          their cart size to the new threshold
+        - >
+          Revenue per session will increase overall despite AOV decrease due to 
+          higher conversion volume
+        - >
+          Customer satisfaction and repeat purchase behavior will remain stable
+    
+    # === EXPERIMENTAL DESIGN SPECIFICATIONS ===
+    design:
+      experiment_name: "free_shipping_threshold_test"
+      experiment_type: "conversion_rate_test"
+      randomization_unit: "user_id"
+      assignment_method: "stratified_block_randomization"
+      
+      # Temporal design - calculated from power analysis
+      # Note: Actual dates will be determined after power analysis validates feasibility
+      
+      temporal_schedule:
+        # These will be populated by power analysis results
+        start_date: null          # Will be set after calendar optimization
+        planned_end_date: null    # Will be calculated: start_date + duration
+        planned_duration_days: null  # Will be calculated: sample_size / daily_traffic
+        minimum_runtime_days: 14     # Business constraint: minimum 2 weeks
+        maximum_runtime_days: 56     # Business constraint: maximum 8 weeks  
+        ramp_up_days: 3             # Operational constraint: gradual traffic increase
+      
+      # Calendar and seasonal considerations
+      seasonal_context: #Impotant for external validity
+        preferred_seasons: ["winter_stable", "spring_stable"]
+        avoid_periods: ["holiday_shopping", "back_to_school", "summer_vacation"]
+        concurrent_campaigns: []  # No other major campaigns during test
+        business_cycle_phase: "post_holiday_normalization"
+    
+    # === POPULATION DEFINITION & ELIGIBILITY ===
+    # Critical: These criteria determine who enters the experiment
+    # Data generation will ONLY include users who meet these criteria
+    population:
+      target_population: >
+        New and returning customers in stable shipping markets with 
+        sufficient purchase intent (cart value >$20)
+      
+      # Inclusion criteria - users MUST meet ALL of these
+      eligibility_criteria:
+        include:
+          customer_types: ["new", "returning"]  # Exclude one-time bargain hunters
+          countries: ["US", "CA", "UK"]         # Stable shipping cost markets
+          min_cart_value: 20.00                 # Avoid very small impulse purchases
+          device_types: ["desktop", "mobile", "tablet"]  # All device types
+          session_quality: "human_traffic"      # Exclude bots and scrapers
+          
+        # Exclusion criteria - users with ANY of these are excluded
+        exclude:
+          vip_customers: true                    # Don't risk high-value relationships
+          employee_accounts: true               # Avoid internal bias
+          test_accounts: true                   # Clean data only
+          customers_with_shipping_issues: true  # Avoid confounding factors
+          users_in_other_experiments: true      # Prevent interaction effects
+      
+      # Stratified randomization ensures balanced groups
+      # We balance across dimensions that could affect the outcome
+      stratification:
+        stratify_by:
+          - customer_segment: ["new", "returning", "lapsed_reactivated"]
+          - device_type: ["desktop", "mobile", "tablet"]  
+          - geographic_region: ["US_East", "US_West", "CA", "UK"]
+          - historical_aov: ["low_0_35", "medium_35_75", "high_75_plus"]
+        
+        # Quality controls for randomization
+        balance_tolerance: 0.05      # Maximum 5% imbalance per stratum
+        minimum_stratum_size: 100    # Require at least 100 users per stratum (To be reviewed post-hoc)
+    
+    # === TREATMENT VARIANTS ===
+    # Define exactly what each user experiences
+    variants:
+      control:
+        name: "current_threshold"
+        allocation: 0.5  # 50% of eligible users
+        description: "Current $50 free shipping threshold"
+        implementation:
+          shipping_threshold_usd: 50.00
+          shipping_cost_below_threshold: 5.99
+          messaging: "Free shipping on orders $50+"
+          ui_treatment: "current_design"
+          
+      treatment:
+        name: "reduced_threshold" 
+        allocation: 0.5  # 50% of eligible users
+        description: "Reduced $35 free shipping threshold"
+        implementation:
+          shipping_threshold_usd: 35.00
+          shipping_cost_below_threshold: 5.99  # Same shipping cost, different threshold
+          messaging: "Free shipping on orders $35+"
+          ui_treatment: "updated_messaging"
+    
+    
+    # === SUCCESS METRICS FRAMEWORK ===
+    metrics:
+      
+      # Primary metric - the main business question we're trying to answer
+      primary:
+        name: "conversion_rate"
+        definition: "unique_orders / unique_sessions_with_cart_above_min"
+        calculation_window: "30_days_post_assignment"
+        business_significance_threshold: 0.08  # 8% relative improvement required
+        statistical_significance_level: 0.05   # 95% confidence required
+        
+        # These drive the power analysis calculations
+        baseline_assumptions:
+          historical_conversion_rate: 0.045    # 4.5% from TheLook analysis
+          expected_treatment_rate: 0.0486      # 4.86% (8% relative improvement)
+          daily_eligible_sessions: null        # Will be measured from historical data
+      
+      # Secondary metrics - consider trade-offs and side effects
+      secondary:
+        - name: "average_order_value"
+          definition: "total_revenue / total_orders"
+          guardrail_threshold: -0.05            # Don't accept >5% AOV decrease
+          calculation_window: "30_days_post_assignment"
+          expected_direction: "decrease"         # We expect AOV to drop slightly
+          
+        - name: "revenue_per_session"
+          definition: "total_revenue / unique_sessions_with_cart_above_min"
+          target_direction: "increase"          # Primary business goal
+          calculation_window: "30_days_post_assignment"
+          
+        - name: "items_per_order"
+          definition: "total_items / total_orders"
+          target_direction: "stable"            # Should not change significantly
+          calculation_window: "30_days_post_assignment"
+          
+        - name: "cart_abandonment_rate"
+          definition: "sessions_with_cart_not_converted / sessions_with_cart"
+          target_direction: "decrease"          # Should improve with lower threshold
+          calculation_window: "30_days_post_assignment"
+      
+      # Guardrail metrics - safety measures to protect the business
+      # These have automatic stop conditions if thresholds are exceeded
+      guardrail_metrics:
+        - name: "refund_rate"
+          definition: "refunded_orders / total_orders"
+          threshold: 0.03                       # Stop if refunds exceed 3%
+          monitoring_frequency: "daily"
+          alert_condition: "above_threshold"
+          
+        - name: "customer_service_volume"
+          definition: "support_tickets / total_orders"
+          threshold: 1.2                        # Stop if support load increases 20% relatively
+          monitoring_frequency: "daily"
+          alert_condition: "above_baseline_ratio"
+          
+        - name: "payment_failure_rate"
+          definition: "failed_payments / payment_attempts"
+          threshold: 0.05                       # Stop if payment failures exceed 5%
+          monitoring_frequency: "daily"
+          alert_condition: "above_threshold"
+    
+    
+    # === STATISTICAL POWER ANALYSIS ===
+    # These parameters drive sample size and duration calculations
+    power_analysis:
+      
+      # Core statistical parameters
+      statistical_power: 0.80                  # 80% power (industry standard)
+      significance_level: 0.05                 # 5% Type I error rate (95% confidence)
+      test_type: "two_sided"                   # Two-tailed test (more conservative)
+      multiple_testing_correction: "bonferroni" # Adjust for multiple secondary metrics
+      
+      # Effect size definition - what we're trying to detect
+      effect_size:
+        type: "relative_improvement"           # 8% relative improvement
+        magnitude: 0.08                       # 8% relative change - determined from business analysis -- this should drive required revenue growth
+        baseline_metric_value: 0.045          # 4.5% current conversion rate
+        treatment_metric_value: 0.0486        # 4.86% expected treatment rate
+        absolute_difference: 0.0036           # 0.36 percentage points absolute
+        minimum_detectable_effect: 0.08       # Smallest effect we care about
+      
+      # Sample size requirements - will be calculated by power analysis
+      sample_size:
+        required_per_variant: null            # Calculated using two-proportion z-test
+        total_required: null                  # required_per_variant * 2
+        safety_buffer: 1.1                   # 10% buffer for dropouts/exclusions
+        final_target_per_variant: null       # required_per_variant * safety_buffer
+      
+      # Traffic analysis - will be measured from TheLook historical data
+      traffic_analysis:
+        daily_total_users: null               # Historical average from TheLook
+        daily_eligible_users: null            # After applying eligibility criteria
+        eligible_user_percentage: null        # Fraction of total users eligible
+        daily_users_per_variant: null         # daily_eligible * allocation (0.5)
+        traffic_variability: null             # Standard deviation of daily traffic
+      
+      # Duration calculation - derived from sample size and traffic
+      duration_calculation:
+        required_duration_days: null          # sample_size / daily_users_per_variant
+        business_minimum_days: 14             # Never run less than 2 weeks (Business assumption)
+        business_maximum_days: 56             # Never run more than 8 weeks (Business assumption)
+        final_planned_duration: null          # max(required, minimum)
+        feasibility_status: null              # "feasible" or "not_feasible"
+        
+      # Sequential testing parameters (advanced)
+      sequential_testing:
+        enable_early_stopping: true          # Allow stopping for overwhelming evidence
+        interim_analysis_frequency: 7        # Check results every 7 days
+        alpha_spending_function: "obrien_fleming"  # Conservative spending
+        futility_boundary: 0.01              # Stop if effect size <1%
+        superiority_boundary: 0.001          # Stop early if p-value <0.001
+    
+    # === IMPLEMENTATION REQUIREMENTS ===
+    # Technical specifications for data generation (running experiment) and experiment execution
+    implementation:
+      
+      # Data generation requirements
+      data_generation:
+        base_data_source: "bigquery-public-data.thelook_ecommerce"
+        synthetic_overlay_tables:
+          - "experiment_assignments"           # User → variant mapping
+          - "experiment_outcomes"             # Post-assignment behavior
+          - "experiment_metadata"             # Test configuration and tracking
+        
+        # Realistic effect modeling
+        effect_modeling:
+          baseline_conversion_rate: 0.045     # Control group true rate
+          treatment_effect_size: 0.08         # Treatment lift
+          effect_emergence_timeline: 7        # Days for full effect to emerge
+          individual_variation: 0.15          # User-level response variation
+          temporal_patterns: true             # Include day-of-week effects
+      
+      # Analysis requirements  
+      analysis_requirements:
+        primary_analysis_method: "two_proportion_z_test"
+        confidence_interval_method: "wilson_score"
+        subgroup_analysis: ["customer_segment", "device_type", "geographic_region"]
+        heterogeneous_treatment_effects: true
+        bootstrap_iterations: 1000           # For robust confidence intervals
+        
+      # Business decision criteria
+      decision_framework:
+        launch_criteria:
+          statistical_significance: true      # p < 0.05 required
+          practical_significance: true       # Effect size > 8% required
+          guardrail_compliance: true         # All guardrails within limits
+          business_case_positive: true       # ROI calculation positive
+          
+        stop_criteria:
+          guardrail_violation: true          # Any guardrail exceeded
+          futility_reached: true             # No hope of significance
+          maximum_duration_reached: true     # Hit time limit
+          business_priorities_changed: true  # Strategic pivot
+    
+    # === DOCUMENTATION & TRACKING ===
+    metadata:
+      experiment_owner: "Kevin Waithaka"
+      business_stakeholder: "VP of E-commerce"
+      engineering_lead: "Kevin Waithaka" 
+      created_date: "2024-01-08"
+      last_updated: "2024-01-08"
+      config_version: "1.0.0"
+      
+      # Links to supporting documentation: Placeholders
+      documentation:
+        experiment_proposal: "docs/experiments/free_shipping_threshold_proposal.md"
+        business_case: "docs/business_cases/q1_conversion_optimization.md"
+        technical_specification: "docs/technical/shipping_threshold_implementation.md"
+        
+      # Related experiments and dependencies
+      related_experiments: []                # No dependencies for this experiment
+      prerequisite_experiments: []          # No required predecessors
+      
+      # Success criteria documentation
+      success_definition: >
+        Success is defined as achieving statistical significance (p < 0.05) on the 
+        primary conversion rate metric with at least 8% relative improvement, while 
+        maintaining all guardrail metrics within acceptable bounds and demonstrating 
+        positive ROI through increased revenue per session.
+
+# =====================================================================================
+# FUTURE EXPERIMENTS (Placeholder Configurations)
+# =====================================================================================
+# These will be fully specified in future versions of this configuration package
+
+  checkout_simplification_test:
+    # Will be implemented in v1.1.0
+    status: "planned"
+    business_justification: "Reduce cart abandonment through UX optimization"
+    planned_timeline: "Q1 2024 - After free shipping threshold test completes"
+    
+  recommendation_algorithm_test:
+    # Will be implemented in v1.2.0  
+    status: "planned"
+    business_justification: "Increase cross-selling through improved ML recommendations"
+    planned_timeline: "Q2 2024 - After checkout optimization learnings"
+
+# =====================================================================================
+# CONFIGURATION METADATA
+# =====================================================================================
+config_metadata:
+  version: "1.0.0"
+  created_date: "2024-01-08"
+  last_updated: "2024-01-08"
+  schema_version: "1.0"
+  
+  # Validation rules
+  validation_rules:
+    required_experiment_fields: [
+      "business_justification", "hypothesis", "design", "population", 
+      "variants", "metrics", "power_analysis", "implementation"
+    ]
+    
+    required_variant_fields: ["name", "allocation", "description", "implementation"]
+    required_metric_fields: ["name", "definition", "calculation_window"]
+    
+  # Change log for audit trail
+  change_log:
+    - version: "1.0.0"
+      date: "2024-01-08"
+      changes: "Initial configuration with free shipping threshold experiment"
+      author: "Kevin Waithaka"
