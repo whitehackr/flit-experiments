@@ -25,8 +25,8 @@ class PowerAnalysisResult:
     """
     Structured container for power analysis results
     
-    Using dataclasses shows modern Python practices and makes results
-    easy to work with downstream. Much better than returning dictionaries.
+    Using dataclasses makes results easy to work with downstream. 
+    Much better than returning dictionaries.
     """
     experiment_name: str
     config_version: str
@@ -389,8 +389,8 @@ class ExperimentPowerAnalysis:
         """
         Calculate how long experiment needs to run to collect required sample
         
-        Incorporates traffic variability and safety buffers - shows sophisticated
-        understanding of real-world experimental challenges.
+        Incorporates traffic variability and safety buffers - Here we
+        are considering real-world experimental challenges.
         """
         # Apply safety buffer for dropouts, exclusions, data quality issues
         target_sample_size = int(required_sample_size * safety_buffer)
@@ -429,7 +429,6 @@ class ExperimentPowerAnalysis:
             Complete feasibility analysis: power → sample size → duration → calendar
             
             This is the main method that orchestrates the entire analysis.
-            It demonstrates systems thinking by coordinating multiple complex analyses.
             """
             power_logger.info(f"\n{'='*60}")
             power_logger.info(f"🔬 POWER ANALYSIS FOR: {experiment_name.upper()}")
@@ -593,8 +592,8 @@ class ExperimentPowerAnalysis:
     def _infer_test_type(self, metric_name: str) -> str:
         """
         Infer the appropriate statistical test type from metric name
-        
-        This shows domain expertise - different metrics need different statistical approaches.
+        Different metrics need different statistical approaches.
+        More sophisticated approach (say NLP) could be used here in future iterations.
         """
         metric_lower = metric_name.lower()
         
@@ -630,10 +629,7 @@ class ExperimentPowerAnalysis:
             experiment_name: Name of experiment (for context)
             num_suggestions: Number of date suggestions to provide
             reference_date: Date to use as "now" (for historical simulation)
-                            If None, uses actual current date
-        
-        This demonstrates business acumen - understanding that experiment timing
-        affects validity and business impact.
+                            If None, uses actual current date.
         """
         # Use reference date for historical simulation or current date for live experiments
         if reference_date is None:
@@ -819,7 +815,7 @@ This module provides comprehensive statistical power analysis capabilities for v
 experiment types. It calculates required sample sizes, estimates test durations based
 on historical traffic, and provides feasibility assessments.
 
-Senior DS Design Principles:
+Design Principles:
 - Generalized approach supporting multiple test types (conversion, continuous, count)
 - Real traffic analysis using historical data (not just assumptions)
 - Business constraint validation (minimum/maximum durations)

@@ -4,7 +4,7 @@ Python package configuration for flit-experiment-configs
 
 This file tells Python how to build and install our experiment configuration package.
 
-Key concepts covered:
+Key concepts:
 - Package versioning (critical for reproducibility)
 - Dependency management (libraries needed)
 - File inclusion (YAML configs get bundled with the package)

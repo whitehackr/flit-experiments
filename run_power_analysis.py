@@ -11,8 +11,8 @@ Usage:
     python run_power_analysis.py --list-experiments
     python run_power_analysis.py --help
 
-Senior DS Practice: Always provide clear CLI interfaces for analysis scripts.
-This allows stakeholders to run analyses independently and integrates well
+Provision of clear CLI interfaces will allow 
+stakeholders to run analyses independently and integrates well
 with automated workflows.
 """
 
