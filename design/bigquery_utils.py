@@ -107,10 +107,25 @@ class BigQueryTrafficAnalyzer:
         # Include conditions
         include_criteria = eligibility_criteria.get('include', {})
         
-        # Countries - TheLook has 'country' field
+        # Countries - TheLook has 'country' field with full names, not codes
         if 'countries' in include_criteria:
             countries = include_criteria['countries']
-            country_list = "', '".join(countries)
+            # Map country codes to full names used in TheLook dataset
+            country_mapping = {
+                'US': 'United States',
+                'CA': 'Canada', 
+                'UK': 'United Kingdom'
+            }
+            
+            full_country_names = []
+            for country_code in countries:
+                if country_code in country_mapping:
+                    full_country_names.append(country_mapping[country_code])
+                else:
+                    # If not in mapping, assume it's already a full name
+                    full_country_names.append(country_code)
+            
+            country_list = "', '".join(full_country_names)
             where_conditions.append(f"users.country IN ('{country_list}')")
         
         # Customer types - we'll infer from order history
@@ -143,10 +158,10 @@ class BigQueryTrafficAnalyzer:
             # Exclude users with lifetime value > $1000
             where_conditions.append("""
                 users.id NOT IN (
-                    SELECT user_id
-                    FROM `bigquery-public-data.thelook_ecommerce.orders`
-                    GROUP BY user_id
-                    HAVING SUM(sale_price) > 1000
+                    SELECT oi.user_id
+                    FROM `bigquery-public-data.thelook_ecommerce.order_items` oi
+                    GROUP BY oi.user_id
+                    HAVING SUM(oi.sale_price) > 1000
                 )
             """)
         
@@ -175,11 +190,11 @@ class BigQueryTrafficAnalyzer:
                     THEN users.id 
                 END) as same_day_converters,
                 
-                -- Calculate average order value for context
+                -- Calculate average order value for context using order_items
                 AVG(CASE 
                     WHEN orders.order_id IS NOT NULL 
                     AND DATE(orders.created_at) = DATE(users.created_at)
-                    THEN orders.sale_price 
+                    THEN oi.sale_price 
                 END) as avg_same_day_order_value,
                 
                 -- Day of week for pattern analysis
@@ -189,10 +204,16 @@ class BigQueryTrafficAnalyzer:
             LEFT JOIN `bigquery-public-data.thelook_ecommerce.orders` orders
                 ON users.id = orders.user_id 
                 AND DATE(orders.created_at) = DATE(users.created_at)
+            LEFT JOIN `bigquery-public-data.thelook_ecommerce.order_items` oi
+                ON orders.order_id = oi.order_id
             
             WHERE {where_clause}
-                AND DATE(users.created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
-                AND DATE(users.created_at) < CURRENT_DATE()
+                -- For live contexts, we would use dynamic date ranges:
+                -- AND DATE(users.created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
+                -- AND DATE(users.created_at) < CURRENT_DATE()
+                -- But for this demo/testing, using fixed historical dates:
+                AND DATE(users.created_at) >= DATE('2024-01-01')
+                AND DATE(users.created_at) <= DATE('2024-03-31')
                 AND users.email IS NOT NULL
                 AND users.country IS NOT NULL
             
