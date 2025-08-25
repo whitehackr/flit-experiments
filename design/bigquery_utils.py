@@ -114,7 +114,12 @@ class BigQueryTrafficAnalyzer:
             country_mapping = {
                 'US': 'United States',
                 'CA': 'Canada', 
-                'UK': 'United Kingdom'
+                'UK': 'United Kingdom',
+                'China': 'China',
+                'Brasil': 'Brasil', 
+                'Spain': 'Spain',
+                'France': 'France',
+                'Germany': 'Germany'
             }
             
             full_country_names = []
@@ -176,48 +181,39 @@ class BigQueryTrafficAnalyzer:
         # Combine all conditions
         where_clause = " AND ".join(where_conditions) if where_conditions else "1=1"
         
-        # Build the complete query
+        # Build the complete query - FOCUS ON ORDERS NOT USERS
         query = f"""
-        WITH daily_user_stats AS (
+        WITH daily_order_stats AS (
             SELECT 
-                DATE(users.created_at) as date,
-                COUNT(DISTINCT users.id) as daily_users,
+                DATE(orders.created_at) as date,
+                COUNT(DISTINCT orders.order_id) as daily_orders,
+                COUNT(DISTINCT orders.user_id) as daily_unique_users,
                 
-                -- Calculate same-day conversion (proxy for session conversion)
-                COUNT(DISTINCT CASE 
-                    WHEN orders.user_id IS NOT NULL 
-                    AND DATE(orders.created_at) = DATE(users.created_at)
-                    THEN users.id 
-                END) as same_day_converters,
-                
-                -- Calculate average order value for context using order_items
-                AVG(CASE 
-                    WHEN orders.order_id IS NOT NULL 
-                    AND DATE(orders.created_at) = DATE(users.created_at)
-                    THEN oi.sale_price 
-                END) as avg_same_day_order_value,
+                -- Calculate order-level metrics
+                AVG(oi.sale_price) as avg_order_value,
+                COUNT(DISTINCT orders.order_id) as total_orders,
                 
                 -- Day of week for pattern analysis
-                EXTRACT(DAYOFWEEK FROM users.created_at) as day_of_week
+                EXTRACT(DAYOFWEEK FROM orders.created_at) as day_of_week
                 
-            FROM `bigquery-public-data.thelook_ecommerce.users` users
-            LEFT JOIN `bigquery-public-data.thelook_ecommerce.orders` orders
-                ON users.id = orders.user_id 
-                AND DATE(orders.created_at) = DATE(users.created_at)
-            LEFT JOIN `bigquery-public-data.thelook_ecommerce.order_items` oi
+            FROM `bigquery-public-data.thelook_ecommerce.orders` orders
+            JOIN `bigquery-public-data.thelook_ecommerce.users` users
+                ON orders.user_id = users.id
+            JOIN `bigquery-public-data.thelook_ecommerce.order_items` oi
                 ON orders.order_id = oi.order_id
             
             WHERE {where_clause}
                 -- For live contexts, we would use dynamic date ranges:
-                -- AND DATE(users.created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
-                -- AND DATE(users.created_at) < CURRENT_DATE()
+                -- AND DATE(orders.created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
+                -- AND DATE(orders.created_at) < CURRENT_DATE()
                 -- But for this demo/testing, using fixed historical dates:
-                AND DATE(users.created_at) >= DATE('2024-01-01')
-                AND DATE(users.created_at) <= DATE('2024-03-31')
+                AND DATE(orders.created_at) >= DATE('2024-01-01')
+                AND DATE(orders.created_at) <= DATE('2024-03-31')
+                AND orders.status != 'Cancelled'
                 AND users.email IS NOT NULL
                 AND users.country IS NOT NULL
             
-            GROUP BY DATE(users.created_at), EXTRACT(DAYOFWEEK FROM users.created_at)
+            GROUP BY DATE(orders.created_at), EXTRACT(DAYOFWEEK FROM orders.created_at)
         ),
         
         summary_stats AS (
