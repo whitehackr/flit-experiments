@@ -100,7 +100,7 @@ experiments:
       eligibility_criteria:
         include:
           customer_types: ["new", "returning"]  # Exclude one-time bargain hunters
-          countries: ["US", "CA", "UK"]         # Stable shipping cost markets
+          countries: ["United States", "CA", "United Kingdom"]         # Stable shipping cost markets
           min_cart_value: 20.00                 # Avoid very small impulse purchases
           device_types: ["desktop", "mobile", "tablet"]  # All device types
           session_quality: "human_traffic"      # Exclude bots and scrapers
@@ -639,7 +639,7 @@ experiments:
       eligibility_criteria:
         include:
           customer_types: ["new", "returning"]
-          countries: ["US", "UK", "China", "Brasil", "Spain", "France", "Germany"]
+          countries: ["United States", "United Kingdom", "China", "Brasil", "Spain", "France", "Germany"]
           min_cart_value: 10.00      # Reasonable threshold
           device_types: ["desktop", "mobile", "tablet"]
           session_quality: "human_traffic"
@@ -913,7 +913,7 @@ experiments:
       eligibility_criteria:
         include:
           customer_types: ["new", "returning"]
-          countries: ["US", "UK", "China", "Brasil", "Spain", "France", "Germany"]
+          countries: ["United States", "United Kingdom", "China", "Brasil", "Spain", "France", "Germany"]
           min_account_age_days: 0            # Include all account ages
           device_types: ["desktop", "mobile", "tablet"]
           session_quality: "human_traffic"
@@ -1190,7 +1190,7 @@ experiments:
       eligibility_criteria:
         include:
           customer_types: ["new", "returning"]
-          countries: ["US", "UK", "China", "Brasil", "Spain", "France", "Germany"]
+          countries: ["United States", "United Kingdom", "China", "Brasil", "Spain", "France", "Germany"]
           min_account_age_days: 0
           device_types: ["desktop", "mobile", "tablet"]
           session_quality: "human_traffic"
