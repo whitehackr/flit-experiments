@@ -833,6 +833,553 @@ experiments:
         data constraints.
 
 # =====================================================================================
+# EXPERIMENT 1D: Free Shipping Threshold Optimization (v1.1 - Orders Per User)
+# =====================================================================================
+# Business Context: Methodologically sound approach using orders per eligible user
+# Key Change: Primary metric changed from conversion_rate to orders_per_eligible_user
+# Statistical Rigor: Restored to 95% confidence, 80% power
+# =====================================================================================
+  
+  free_shipping_threshold_test_v1_1:
+    
+    # === BUSINESS CONTEXT & STRATEGY ===
+    business_justification: >
+      Orders per eligible user metric provides methodologically sound measurement
+      of shipping threshold impact. Uses Jan-Feb 2024 baseline period to establish
+      realistic orders per user rate, then measures increase in purchase frequency
+      when shipping friction is reduced.
+    
+    risk_assessment: >
+      MEDIUM RISK: Proper statistical rigor maintained with realistic business
+      expectations. Orders per user metric directly aligns with business impact
+      of increased purchase frequency from reduced shipping thresholds.
+    
+    strategic_importance: >
+      Demonstrates enterprise-grade experiment design with methodologically 
+      correct primary metric. Solves conversion rate measurement challenges
+      while maintaining statistical validity and business relevance.
+    
+    # === HYPOTHESIS FRAMEWORK ===
+    hypothesis:
+      primary: >
+        Reducing free shipping threshold from $50 to $35 will increase orders
+        per eligible user by 50% relative (baseline → 1.5x baseline) due to
+        reduced purchase friction encouraging more frequent ordering behavior
+      
+      secondary:
+        - >
+          Average order value may decrease slightly as users optimize cart 
+          size for the lower threshold, but total revenue per user will increase
+        - >
+          Customer purchase frequency will establish new behavioral patterns
+          leading to sustained higher lifetime value
+    
+    # === EXPERIMENTAL DESIGN SPECIFICATIONS ===
+    design:
+      experiment_name: "free_shipping_threshold_test_v1_1"
+      experiment_type: "orders_per_user_test"  # New test type
+      randomization_unit: "user_id"
+      assignment_method: "stratified_block_randomization"
+      
+      temporal_schedule:
+        # Baseline period for rate calculation
+        baseline_period_start: "2024-01-01"
+        baseline_period_end: "2024-02-29"
+        
+        # Experiment period (simulated in flit-data-platform)
+        experiment_period_start: "2024-03-01"
+        experiment_period_end: "2024-03-31"
+        
+        start_date: null                     # Will be set after power analysis
+        planned_end_date: null
+        planned_duration_days: null
+        minimum_runtime_days: 14             # Business minimum
+        maximum_runtime_days: 31             # March month limit
+        ramp_up_days: 2
+      
+      seasonal_context:
+        preferred_seasons: ["winter_stable", "spring_stable"]
+        avoid_periods: ["holiday_shopping"]
+        concurrent_campaigns: []
+        business_cycle_phase: "stable"
+    
+    # === POPULATION DEFINITION & ELIGIBILITY ===
+    population:
+      target_population: >
+        Eligible users identified in Jan-Feb 2024 baseline period based on
+        profile criteria. Same user population tracked for orders in both
+        baseline and experiment periods.
+      
+      eligibility_criteria:
+        include:
+          customer_types: ["new", "returning"]
+          countries: ["US", "UK", "China", "Brasil", "Spain", "France", "Germany"]
+          min_account_age_days: 0            # Include all account ages
+          device_types: ["desktop", "mobile", "tablet"]
+          session_quality: "human_traffic"
+          
+        exclude:
+          employee_accounts: true
+          test_accounts: true
+      
+      stratification:
+        stratify_by:
+          - customer_segment: ["new", "returning"]
+          - device_type: ["desktop", "mobile", "tablet"]
+          - geographic_region: ["US", "EU", "APAC", "LATAM"]
+        
+        balance_tolerance: 0.05
+        minimum_stratum_size: 100
+    
+    # === TREATMENT VARIANTS ===
+    variants:
+      control:
+        name: "current_threshold"
+        allocation: 0.5
+        description: "Current $50 free shipping threshold"
+        implementation:
+          shipping_threshold_usd: 50.00
+          shipping_cost_below_threshold: 5.99
+          messaging: "Free shipping on orders $50+"
+          ui_treatment: "current_design"
+          
+      treatment:
+        name: "reduced_threshold"
+        allocation: 0.5
+        description: "Reduced $35 free shipping threshold"
+        implementation:
+          shipping_threshold_usd: 35.00
+          shipping_cost_below_threshold: 5.99
+          messaging: "Free shipping on orders $35+"
+          ui_treatment: "updated_messaging"
+    
+    # === SUCCESS METRICS FRAMEWORK ===
+    metrics:
+      primary:
+        name: "orders_per_eligible_user"
+        definition: "total_orders / eligible_user_population"
+        calculation_window: "experiment_period"  # March 2024
+        business_significance_threshold: 0.50    # 50% relative improvement
+        statistical_significance_level: 0.05     # 95% confidence (restored)
+        
+        baseline_assumptions:
+          # Calculated from Jan-Feb 2024 data (3,163 users who ordered, 3,246 total orders)
+          historical_orders_per_user: 1.0262     # 3,246 orders / 3,163 users
+          expected_treatment_rate: 1.5393        # 1.0262 * 1.50 (50% improvement)
+          daily_eligible_users: 53               # 3,163 users / 60 days
+      
+      secondary:
+        - name: "average_order_value"
+          definition: "total_revenue / total_orders"
+          guardrail_threshold: -0.15              # Accept 15% AOV decrease
+          calculation_window: "experiment_period"
+          expected_direction: "decrease"
+          
+        - name: "revenue_per_eligible_user"
+          definition: "total_revenue / eligible_user_population"
+          target_direction: "increase"            # Primary business goal
+          calculation_window: "experiment_period"
+          
+        - name: "active_user_rate"
+          definition: "users_with_orders / eligible_user_population"
+          target_direction: "increase"            # More users should order
+          calculation_window: "experiment_period"
+      
+      guardrail_metrics:
+        - name: "refund_rate"
+          definition: "refunded_orders / total_orders"
+          threshold: 0.05
+          monitoring_frequency: "weekly"
+          alert_condition: "above_threshold"
+          
+        - name: "customer_service_volume"
+          definition: "support_tickets / total_orders"
+          threshold: 1.3
+          monitoring_frequency: "weekly"
+          alert_condition: "above_baseline_ratio"
+    
+    # === STATISTICAL POWER ANALYSIS ===
+    power_analysis:
+      
+      # Restored statistical rigor
+      statistical_power: 0.80                    # 80% power (industry standard)
+      significance_level: 0.05                   # 5% Type I error (95% confidence)
+      test_type: "two_sided"
+      multiple_testing_correction: "bonferroni"
+      
+      # Count-based effect size
+      effect_size:
+        type: "relative_improvement"
+        magnitude: 0.50                         # 50% relative change
+        baseline_metric_value: 1.0262           # Jan-Feb baseline: 1.0262 orders per user
+        treatment_metric_value: 1.5393          # 1.0262 * 1.50
+        absolute_difference: 0.5131             # 1.5393 - 1.0262
+        minimum_detectable_effect: 0.50
+      
+      sample_size:
+        required_per_variant: null
+        total_required: null
+        safety_buffer: 1.10
+        final_target_per_variant: null
+      
+      traffic_analysis:
+        baseline_period_users: null             # Eligible users from Jan-Feb
+        baseline_period_orders: null            # Orders from those users
+        baseline_orders_per_user: null          # Primary baseline metric
+        daily_eligible_users: null              # For duration calculation
+        traffic_variability: null
+      
+      duration_calculation:
+        required_duration_days: null
+        business_minimum_days: 14
+        business_maximum_days: 31               # March month constraint
+        final_planned_duration: null
+        feasibility_status: null
+        
+      sequential_testing:
+        enable_early_stopping: true
+        interim_analysis_frequency: 7
+        alpha_spending_function: "obrien_fleming"
+        futility_boundary: 0.10
+        superiority_boundary: 0.001
+    
+    # === IMPLEMENTATION REQUIREMENTS ===
+    implementation:
+      data_generation:
+        base_data_source: "bigquery-public-data.thelook_ecommerce"
+        baseline_period: "2024-01-01 to 2024-02-29"
+        experiment_period: "2024-03-01 to 2024-03-31"
+        
+        synthetic_overlay_tables:
+          - "experiment_assignments"              # User → variant mapping
+          - "experiment_outcomes"                 # March order behavior
+          - "experiment_metadata"
+        
+        effect_modeling:
+          baseline_orders_per_user: null          # From Jan-Feb analysis
+          treatment_effect_size: 0.50             # 50% increase
+          effect_emergence_timeline: 7            # One week for full effect
+          individual_variation: 0.15              # Realistic user variation
+          temporal_patterns: true
+      
+      analysis_requirements:
+        primary_analysis_method: "two_proportion_z_test"
+        confidence_interval_method: "wilson_score"
+        subgroup_analysis: ["customer_segment", "device_type", "geographic_region"]
+        heterogeneous_treatment_effects: true
+        bootstrap_iterations: 1000
+        
+      decision_framework:
+        launch_criteria:
+          statistical_significance: true          # p < 0.05
+          practical_significance: true           # Effect size ≥ 50%
+          guardrail_compliance: true
+          business_case_positive: true
+          
+        stop_criteria:
+          guardrail_violation: true
+          futility_reached: true
+          maximum_duration_reached: true
+          business_priorities_changed: true
+    
+    # === DOCUMENTATION & TRACKING ===
+    metadata:
+      experiment_owner: "Kevin Waithaka"
+      business_stakeholder: "VP of E-commerce"
+      engineering_lead: "Kevin Waithaka"
+      created_date: "2024-08-25"
+      last_updated: "2024-08-25"
+      config_version: "1.1.0"                   # Major version for metric change
+      
+      documentation:
+        experiment_proposal: "docs/experiments/free_shipping_v1_1_orders_per_user.md"
+        business_case: "docs/business_cases/orders_per_user_methodology.md"
+        technical_specification: "docs/technical/orders_per_user_implementation.md"
+        
+      related_experiments: [
+        "free_shipping_threshold_test",
+        "free_shipping_threshold_test_feasible", 
+        "free_shipping_threshold_test_v2"
+      ]
+      prerequisite_experiments: []
+      
+      success_definition: >
+        Success is defined as achieving statistical significance (p < 0.05) 
+        on the orders per eligible user metric with at least 50% relative 
+        improvement, while maintaining all guardrail metrics within acceptable 
+        bounds. This methodology solves conversion rate measurement challenges
+        while providing actionable business insights about purchase frequency
+        changes due to shipping threshold optimization.
+
+# =====================================================================================
+# EXPERIMENT 1E: Free Shipping Threshold Optimization (v1.1.1 - Optimized Effect Size)
+# =====================================================================================
+# Business Context: Optimized for realistic 20% effect detection within data constraints
+# Key Change: Reduced effect size from 50% to 20% for more precise business insights
+# Duration: 15 days (calculated from available daily users and required sample)
+# =====================================================================================
+  
+  free_shipping_threshold_test_v1_1_1:
+    
+    # === BUSINESS CONTEXT & STRATEGY ===
+    business_justification: >
+      Optimized version targeting 20% orders per user improvement - more realistic
+      for shipping threshold changes while maximizing statistical precision within
+      available data constraints. 15-day duration provides robust weekly pattern
+      capture with efficient resource utilization.
+    
+    risk_assessment: >
+      MEDIUM RISK: 20% effect size represents realistic business expectations
+      for shipping optimization while maintaining high statistical confidence.
+      Optimized duration balances precision with resource efficiency.
+    
+    strategic_importance: >
+      Demonstrates optimal experiment design by balancing effect size realism,
+      statistical power, and resource constraints. Provides maximum business
+      insight precision within data availability limits.
+    
+    # === HYPOTHESIS FRAMEWORK ===
+    hypothesis:
+      primary: >
+        Reducing free shipping threshold from $50 to $35 will increase orders
+        per eligible user by 20% relative (1.026 → 1.231 orders per user) due to
+        reduced purchase friction encouraging moderately increased ordering frequency
+      
+      secondary:
+        - >
+          Average order value may decrease slightly but total revenue per user
+          will increase due to higher order frequency
+        - >
+          Customer satisfaction will improve with reduced shipping friction
+    
+    # === EXPERIMENTAL DESIGN SPECIFICATIONS ===
+    design:
+      experiment_name: "free_shipping_threshold_test_v1_1_1"
+      experiment_type: "orders_per_user_test"
+      randomization_unit: "user_id"
+      assignment_method: "stratified_block_randomization"
+      
+      temporal_schedule:
+        # Baseline period for rate calculation
+        baseline_period_start: "2024-01-01"
+        baseline_period_end: "2024-02-29"
+        
+        # Optimized experiment period
+        experiment_period_start: "2024-03-01"
+        experiment_period_end: "2024-03-15"  # 15-day duration
+        
+        start_date: null
+        planned_end_date: null
+        planned_duration_days: 15            # Calculated optimal duration
+        minimum_runtime_days: 14
+        maximum_runtime_days: 31
+        ramp_up_days: 1                      # Minimal ramp for efficiency
+      
+      seasonal_context:
+        preferred_seasons: ["winter_stable", "spring_stable"]
+        avoid_periods: ["holiday_shopping"]
+        concurrent_campaigns: []
+        business_cycle_phase: "stable"
+    
+    # === POPULATION DEFINITION & ELIGIBILITY ===
+    population:
+      target_population: >
+        Eligible users from Jan-Feb 2024 baseline period (3,163 users who placed
+        orders) tracked for ordering behavior in 15-day experiment window.
+      
+      eligibility_criteria:
+        include:
+          customer_types: ["new", "returning"]
+          countries: ["US", "UK", "China", "Brasil", "Spain", "France", "Germany"]
+          min_account_age_days: 0
+          device_types: ["desktop", "mobile", "tablet"]
+          session_quality: "human_traffic"
+          
+        exclude:
+          employee_accounts: true
+          test_accounts: true
+      
+      stratification:
+        stratify_by:
+          - customer_segment: ["new", "returning"]
+          - device_type: ["desktop", "mobile", "tablet"]
+          - geographic_region: ["US", "EU", "APAC", "LATAM"]
+        
+        balance_tolerance: 0.05
+        minimum_stratum_size: 100
+    
+    # === TREATMENT VARIANTS ===
+    variants:
+      control:
+        name: "current_threshold"
+        allocation: 0.5
+        description: "Current $50 free shipping threshold"
+        implementation:
+          shipping_threshold_usd: 50.00
+          shipping_cost_below_threshold: 5.99
+          messaging: "Free shipping on orders $50+"
+          ui_treatment: "current_design"
+          
+      treatment:
+        name: "reduced_threshold"
+        allocation: 0.5
+        description: "Reduced $35 free shipping threshold"
+        implementation:
+          shipping_threshold_usd: 35.00
+          shipping_cost_below_threshold: 5.99
+          messaging: "Free shipping on orders $35+"
+          ui_treatment: "updated_messaging"
+    
+    # === SUCCESS METRICS FRAMEWORK ===
+    metrics:
+      primary:
+        name: "orders_per_eligible_user"
+        definition: "total_orders / eligible_user_population"
+        calculation_window: "experiment_period"
+        business_significance_threshold: 0.20    # 20% relative improvement
+        statistical_significance_level: 0.05     # 95% confidence
+        
+        baseline_assumptions:
+          # Calculated from Jan-Feb 2024 data (3,163 users, 3,246 orders)
+          historical_orders_per_user: 1.0262     # Baseline rate
+          expected_treatment_rate: 1.2314        # 1.0262 * 1.20 (20% improvement)
+          daily_eligible_users: 53               # 3,163 users / 60 days
+      
+      secondary:
+        - name: "average_order_value"
+          definition: "total_revenue / total_orders"
+          guardrail_threshold: -0.10              # Accept 10% AOV decrease
+          calculation_window: "experiment_period"
+          expected_direction: "decrease"
+          
+        - name: "revenue_per_eligible_user"
+          definition: "total_revenue / eligible_user_population"
+          target_direction: "increase"
+          calculation_window: "experiment_period"
+          
+        - name: "active_user_rate"
+          definition: "users_with_orders / eligible_user_population"
+          target_direction: "increase"
+          calculation_window: "experiment_period"
+      
+      guardrail_metrics:
+        - name: "refund_rate"
+          definition: "refunded_orders / total_orders"
+          threshold: 0.05
+          monitoring_frequency: "weekly"
+          alert_condition: "above_threshold"
+    
+    # === STATISTICAL POWER ANALYSIS ===
+    power_analysis:
+      
+      # Maintained statistical rigor
+      statistical_power: 0.80                    # 80% power
+      significance_level: 0.05                   # 95% confidence
+      test_type: "two_sided"
+      multiple_testing_correction: "bonferroni"
+      
+      # Optimized effect size
+      effect_size:
+        type: "relative_improvement"
+        magnitude: 0.20                         # 20% relative change (optimized)
+        baseline_metric_value: 1.0262           # Jan-Feb baseline
+        treatment_metric_value: 1.2314          # 1.0262 * 1.20
+        absolute_difference: 0.2052             # 1.2314 - 1.0262
+        minimum_detectable_effect: 0.20
+      
+      sample_size:
+        required_per_variant: null              # Will be calculated: ~393 users
+        total_required: null                    # Will be calculated: ~786 users
+        safety_buffer: 1.10
+        final_target_per_variant: null
+      
+      traffic_analysis:
+        baseline_period_users: 3163             # Eligible users from Jan-Feb
+        baseline_period_orders: 3246            # Orders from those users
+        baseline_orders_per_user: 1.0262        # Primary baseline metric
+        daily_eligible_users: 53                # For duration calculation
+        traffic_variability: 0.15               # 15% coefficient of variation
+      
+      duration_calculation:
+        required_duration_days: 15              # Calculated: 786 users ÷ 53 daily = 14.8 → 15 days
+        business_minimum_days: 14
+        business_maximum_days: 31
+        final_planned_duration: 15
+        feasibility_status: "FEASIBLE"
+        
+      sequential_testing:
+        enable_early_stopping: true
+        interim_analysis_frequency: 7
+        alpha_spending_function: "obrien_fleming"
+        futility_boundary: 0.05                # Tighter for shorter duration
+        superiority_boundary: 0.001
+    
+    # === IMPLEMENTATION REQUIREMENTS ===
+    implementation:
+      data_generation:
+        base_data_source: "bigquery-public-data.thelook_ecommerce"
+        baseline_period: "2024-01-01 to 2024-02-29"
+        experiment_period: "2024-03-01 to 2024-03-15"  # 15 days
+        
+        synthetic_overlay_tables:
+          - "experiment_assignments"
+          - "experiment_outcomes"
+          - "experiment_metadata"
+        
+        effect_modeling:
+          baseline_orders_per_user: 1.0262      # From Jan-Feb analysis
+          treatment_effect_size: 0.20           # 20% increase
+          effect_emergence_timeline: 3          # Faster emergence for shorter test
+          individual_variation: 0.12            # Realistic user variation
+          temporal_patterns: true
+      
+      analysis_requirements:
+        primary_analysis_method: "two_proportion_z_test"
+        confidence_interval_method: "wilson_score"
+        subgroup_analysis: ["customer_segment", "device_type", "geographic_region"]
+        heterogeneous_treatment_effects: true
+        bootstrap_iterations: 1000
+        
+      decision_framework:
+        launch_criteria:
+          statistical_significance: true        # p < 0.05
+          practical_significance: true         # Effect size ≥ 20%
+          guardrail_compliance: true
+          business_case_positive: true
+          
+        stop_criteria:
+          guardrail_violation: true
+          futility_reached: true
+          maximum_duration_reached: true
+          business_priorities_changed: true
+    
+    # === DOCUMENTATION & TRACKING ===
+    metadata:
+      experiment_owner: "Kevin Waithaka"
+      business_stakeholder: "VP of E-commerce"
+      engineering_lead: "Kevin Waithaka"
+      created_date: "2024-08-25"
+      last_updated: "2024-08-25"
+      config_version: "1.1.1"                 # Optimized version
+      
+      documentation:
+        experiment_proposal: "docs/experiments/free_shipping_v1_1_1_optimized.md"
+        business_case: "docs/business_cases/optimized_effect_detection.md"
+        technical_specification: "docs/technical/15_day_experiment_design.md"
+        
+      related_experiments: [
+        "free_shipping_threshold_test_v1_1"
+      ]
+      prerequisite_experiments: []
+      
+      success_definition: >
+        Success is defined as achieving statistical significance (p < 0.05) 
+        on the orders per eligible user metric with at least 20% relative 
+        improvement within a 15-day experiment window. This optimized design 
+        balances effect size realism with statistical precision while 
+        maximizing resource efficiency.
+
+# =====================================================================================
 # FUTURE EXPERIMENTS (Placeholder Configurations)
 # =====================================================================================
 # These will be fully specified in future versions of this configuration package

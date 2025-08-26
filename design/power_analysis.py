@@ -358,6 +358,21 @@ class ExperimentPowerAnalysis:
                 f"Poisson rates < 5 may require exact methods or larger sample sizes."
             )
         
+        return {
+            "test_type": "two_poisson_rate_test",
+            "baseline_rate": baseline_rate,
+            "treatment_rate": treatment_rate,
+            "absolute_difference": treatment_rate - baseline_rate,
+            "relative_improvement": effect_size,
+            "required_per_variant": n_per_group,
+            "total_required": n_per_group * 2,
+            "statistical_power": power,
+            "significance_level": alpha,
+            "allocation_ratio": allocation_ratio,
+            "assumptions_met": assumptions_met,
+            "warnings": warnings_list
+        }
+        
     def analyze_historical_traffic(self, experiment_name: str) -> Dict[str, Any]:
         """
         Analyze TheLook historical data to estimate eligible user traffic
