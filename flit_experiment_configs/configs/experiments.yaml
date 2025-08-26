@@ -396,7 +396,7 @@ experiments:
       eligibility_criteria:
         include:
           customer_types: ["new", "returning"]
-          countries: ["US", "UK", "China", "Brasil", "Spain", "France", "Germany"]  # Expanded countries
+          countries: ["United States", "United Kingdom", "China", "Brasil", "Spain", "France", "Germany"]  # TheLook country names
           min_cart_value: 5.00       # Much lower threshold
           device_types: ["desktop", "mobile", "tablet"]
           session_quality: "all_traffic"  # Include all traffic
