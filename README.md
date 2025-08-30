@@ -227,6 +227,76 @@ pip install -e .
 python -c "from flit_experiment_configs import get_experiment_config; print('✅ Setup complete')"
 ```
 
+##### Basic Package validation tests
+More fully, before anything else, just check that the installation of the package went well and you are able to use it well.
+
+After the `pip install -e .` command, this is what you should see on your terminal:
+
+```bash
+Obtaining file:///Users/kevin/Documents/repos/flit-experiments
+  Installing build dependencies ... done
+  Checking if build backend supports build_editable ... done
+  Getting requirements to build editable ... done
+  Preparing editable metadata (pyproject.toml) ... done
+Requirement already satisfied: pyyaml>=6.0 in /Users/kevin/anaconda3/envs/flit/lib/python3.11/site-packages (from flit-experiment-configs==1.0.0) (6.0)
+Requirement already satisfied: pydantic>=1.10.0 in /Users/kevin/anaconda3/envs/flit/lib/python3.11/site-packages (from flit-experiment-configs==1.0.0) (1.10.8)
+Requirement already satisfied: typing-extensions>=4.2.0 in /Users/kevin/anaconda3/envs/flit/lib/python3.11/site-packages (from pydantic>=1.10.0->flit-experiment-configs==1.0.0) (4.7.1)
+Building wheels for collected packages: flit-experiment-configs
+  Building editable for flit-experiment-configs (pyproject.toml) ... done
+  Created wheel for flit-experiment-configs: filename=flit_experiment_configs-1.0.0-0.editable-py3-none-any.whl size=9645 sha256=1b4360f7c44f4fc9bba0a64bb6e3425b0da5f4a98380e48a092901ab518c09fc
+  Stored in directory: /private/var/folders/_j/wp2dn1j50cjdbptz4v2qwl840000gn/T/pip-ephem-wheel-cache-8enyvp7d/wheels/44/f1/1a/80be7ab05c6c5196064c8f316e1b18d253945d7f22504edba6
+Successfully built flit-experiment-configs
+Installing collected packages: flit-experiment-configs
+Successfully installed flit-experiment-configs-1.0.0
+```
+
+First, test that basic importation works:
+
+```bash
+(flit) kevin@Kevins-MacBook-Pro flit-experiments % python -c "     
+from flit_experiment_configs import get_experiment_config, get_package_version
+print('✅ Imports successful')
+print(f'Package version: {get_package_version()}')
+"
+✅ Imports successful
+Package version: 1.0.0
+```
+Then, let's test configs reading
+
+```bash
+(flit) kevin@Kevins-MacBook-Pro flit-experiments % python -c "
+from flit_experiment_configs import get_experiment_config, list_available_experiments
+
+# List experiments
+experiments = list_available_experiments()
+print(f'Available experiments: {experiments}')
+
+# Get config
+config = get_experiment_config('free_shipping_threshold_test')
+print(f'✅ Config loaded for: {config[\"design\"][\"experiment_name\"]}')
+print(f'Primary hypothesis: {config[\"hypothesis\"][\"primary\"]}')
+"
+Available experiments: ['free_shipping_threshold_test', 'checkout_simplification_test', 'recommendation_algorithm_test']
+✅ Config loaded for: free_shipping_threshold_test
+Primary hypothesis: Reducing free shipping threshold from $50 to $35 will increase conversion  rate by 8% relative (4.5% → 4.86%) due to reduced purchase friction
+```
+
+Then you can test error handling:
+
+```bash
+(flit) kevin@Kevins-MacBook-Pro flit-experiments % python -c "
+from flit_experiment_configs import get_experiment_config
+try:
+    get_experiment_config('nonexistent_experiment')
+except Exception as e:
+    print(f'✅ Error handling works: {e}')
+"
+✅ Error handling works: Experiment 'nonexistent_experiment' not found. Available experiments: ['free_shipping_threshold_test', 'checkout_simplification_test', 'recommendation_algorithm_test']
+
+```
+Package installed correctly, and you're good to go!
+
+
 ### **Quick Start: Your First Experiment**
 ```python
 # 1. Design your experiment

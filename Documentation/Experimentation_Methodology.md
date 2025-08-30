@@ -65,7 +65,7 @@ Systematic inclusion/exclusion rules:
 - Device/platform compatibility with the intervention
 
 **Exclusion Criteria** (any ONE excludes):
-- High-value customers (minimize risk to revenue)
+- High-value customers (minimize risk to revenue -- unless the test is specifically about high value customers)
 - Internal accounts (eliminate bias)
 - Users in other experiments (prevent interaction effects)
 - Edge cases that could confound results
@@ -189,7 +189,7 @@ Example: 5 looks at α=0.05 → True α ≈ 0.23 (not 0.05!)
 ##### **Alpha Spending Functions**
 We control overall Type I error by "spending" alpha across interim analyses:
 
-**O'Brien-Fleming (Conservative - Our Standard)**:
+**O'Brien-Fleming (Conservative - Our Standard at Flit)**:
 - Very strict early boundaries, easier final boundary
 - Protects against false early stopping
 - Formula: `z_k = z_α * √(K/k)` where k=current look, K=total looks
@@ -208,7 +208,7 @@ We control overall Type I error by "spending" alpha across interim analyses:
 
 **Pre-Registration Requirements (Critical)**:
 1. **Fixed Analysis Schedule**: Specify exact interim analysis dates
-2. **Spending Function Choice**: Select O'Brien-Fleming, Pocock, or custom
+2. **Spending Function Choice**: Select O'Brien-Fleming (preferred/default), Pocock, or custom
 3. **Stopping Boundaries**: Calculate adjusted p-value thresholds
 4. **Maximum Duration**: Set absolute time limit regardless of results
 
