@@ -1,0 +1,184 @@
+{
+  "report_metadata": {
+    "created_at": "2025-09-03T19:41:50.542556",
+    "analysis_version": "1.0.0",
+    "report_type": "detailed_statistical_analysis",
+    "data_source": "flit-data-platform.flit_marts.mart_free_shipping_threshold_analysis"
+  },
+  "analysis_results": {
+    "experiment_info": {
+      "name": "free_shipping_threshold_test_v1_1_1",
+      "analysis_date": "2025-09-03T19:41:50.542530",
+      "primary_metric": "orders_during_experiment",
+      "sample_size": 1217
+    },
+    "statistical_results": {
+      "data_summary": {
+        "control": {
+          "label": "Control Group",
+          "count": 1122,
+          "mean": 1.0098039215686274,
+          "std": 0.09857212912971167,
+          "sem": 0.0029427794107907885,
+          "median": 1.0,
+          "q25": 1.0,
+          "q75": 1.0,
+          "min": 1.0,
+          "max": 2.0,
+          "variance": 0.009716464641164551,
+          "skewness": 9.950371902099892,
+          "kurtosis": 97.00990099009896
+        },
+        "treatment": {
+          "label": "Treatment Group",
+          "count": 95,
+          "mean": 1.105263157894737,
+          "std": 0.34126436406605853,
+          "sem": 0.03501298498698824,
+          "median": 1.0,
+          "q25": 1.0,
+          "q75": 1.0,
+          "min": 1.0,
+          "max": 3.0,
+          "variance": 0.11646136618141135,
+          "skewness": 3.3453599088723993,
+          "kurtosis": 11.289016272189333
+        }
+      },
+      "effect_sizes": {
+        "absolute_difference": 0.09545923632610953,
+        "relative_lift": 0.0945324476239143,
+        "relative_lift_percent": 9.45324476239143,
+        "cohens_d": 0.712007384054852,
+        "glass_delta": 0.9684201525209437,
+        "hedges_g": 0.7115677828710354,
+        "control_mean": 1.0098039215686274,
+        "treatment_mean": 1.105263157894737,
+        "pooled_std": 0.13407057070458064
+      },
+      "significance_tests": {
+        "welch_ttest": "StatisticalResult(test_name=\"Welch's t-test\", statistic=2.716816210217369, p_value=0.007828313096187383, significant=True, method_notes='Assumes unequal variances (recommended for A/B testing)')",
+        "student_ttest": "StatisticalResult(test_name=\"Student's t-test\", statistic=6.663423860284162, p_value=4.046413041835712e-11, significant=True, method_notes='Assumes equal variances')",
+        "mann_whitney": "StatisticalResult(test_name='Mann-Whitney U test', statistic=57827.0, p_value=3.942885019758396e-10, significant=True, method_notes=\"Non-parametric alternative, doesn't assume normality\")"
+      },
+      "confidence_intervals": {
+        "method": "Bootstrap",
+        "confidence_level": 0.95,
+        "n_bootstrap_samples": 10000,
+        "absolute_difference_ci": {
+          "lower": 0.033192607186415035,
+          "upper": 0.1700347124495729,
+          "range": "[0.0332, 0.1700]"
+        },
+        "relative_lift_ci": {
+          "lower": 0.032899386274874265,
+          "upper": 0.16853263901803955,
+          "range": "[3.29%, 16.85%]"
+        }
+      },
+      "power_analysis": {
+        "observed_effect_size_cohens_d": 0.38005060220446146,
+        "achieved_power": 1.0,
+        "total_sample_size": 1217,
+        "power_adequate": "True",
+        "power_curve": {
+          "effect_size_0.1": 0.9364741930279393,
+          "effect_size_0.2": 1.0,
+          "effect_size_0.3": 1.0,
+          "effect_size_0.5": 1.0,
+          "effect_size_0.8": 1.0
+        },
+        "interpretation": {
+          "power_level": "Excellent",
+          "minimum_detectable_effect": "Can detect Cohen's d >= 0.380 with 100.0% power"
+        }
+      },
+      "sensitivity_analysis": {
+        "outlier_sensitivity": {
+          "original_effect": 0.0945324476239143,
+          "without_outliers_effect": 0.0,
+          "effect_change": 0.0945324476239143,
+          "p_value_without_outliers": NaN,
+          "robust_to_outliers": "False",
+          "outliers_removed": {
+            "control": 11,
+            "treatment": 9
+          }
+        },
+        "minimum_detectable_effect": {
+          "minimum_cohens_d": 1.9999960318087815,
+          "minimum_absolute_effect": 0.19714386710636614,
+          "minimum_relative_effect": 0.19522984897911988,
+          "minimum_relative_effect_percent": 19.52298489791199,
+          "target_power": 0.8,
+          "sample_size": 1217
+        }
+      },
+      "assumptions": {
+        "normality": {
+          "test_used": "Shapiro-Wilk",
+          "control": {
+            "statistic": 0.07080227136611938,
+            "p_value": 0.0,
+            "normal": false
+          },
+          "treatment": {
+            "statistic": 0.3377528190612793,
+            "p_value": 1.0005709038339431e-18,
+            "normal": false
+          }
+        },
+        "equal_variances": {
+          "test_used": "Levene's test",
+          "statistic": 44.40121754180414,
+          "p_value": 4.046413041839782e-11,
+          "equal_variances": "False",
+          "recommendation": "Use Welch's t-test"
+        },
+        "independence": {
+          "assumption": "Independence of observations",
+          "status": "Assumed based on experimental design",
+          "notes": "Verify randomization was properly implemented"
+        }
+      },
+      "metadata": {
+        "analysis_engine_version": "1.0.0",
+        "significance_level": 0.05,
+        "total_sample_size": 1217,
+        "balance_ratio": 0.08467023172905526
+      }
+    },
+    "business_insights": {
+      "primary_insight": "The new approach shows a 9.5% improvement with statistical confidence",
+      "effect_magnitude": "Small but potentially meaningful impact",
+      "statistical_reliability": "High statistical reliability",
+      "estimated_impact": "Estimated 114,551 additional units annually (assumes 50,000 eligible users)",
+      "implementation_readiness": "Ready for implementation",
+      "key_risks": "MEDIUM - Group imbalance may affect generalizability",
+      "confidence_factors": [
+        "High statistical power supports reliable detection",
+        "Strong statistical significance (p < 0.01)",
+        "Data not normally distributed (non-parametric tests validate)"
+      ]
+    },
+    "recommendation": {
+      "decision": "CONSIDER_LAUNCH",
+      "confidence": "MEDIUM",
+      "reasoning": "Small but significant positive effect (9.5%) - evaluate cost/benefit",
+      "risk_level": "MEDIUM - Group imbalance may affect generalizability",
+      "expected_impact": "Estimated 114,551 additional units annually (assumes 50,000 eligible users)",
+      "next_steps": [
+        "Conduct detailed cost-benefit analysis",
+        "Review operational readiness for implementation",
+        "Consider pilot test with subset of users",
+        "Evaluate alternative approaches with larger effects"
+      ]
+    }
+  },
+  "methodology_notes": {
+    "statistical_tests": "Primary analysis uses Welch's t-test (unequal variances assumed)",
+    "effect_size_measure": "Relative lift calculated as (treatment_mean - control_mean) / control_mean",
+    "confidence_intervals": "Bootstrap method with 10,000 iterations for robust estimation",
+    "multiple_testing": "No correction applied - single primary hypothesis test"
+  }
+}

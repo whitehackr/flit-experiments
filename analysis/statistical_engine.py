@@ -27,6 +27,7 @@ from statsmodels.stats.power import ttest_power
 from typing import Dict, Any, List, Tuple, Optional, Union
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -126,12 +127,153 @@ class StatisticalAnalysisEngine:
                 'analysis_engine_version': '1.0.0',
                 'significance_level': self.alpha,
                 'total_sample_size': len(data.control) + len(data.treatment),
-                'balance_ratio': min(len(data.control), len(data.treatment)) / max(len(data.control), len(data.treatment))
+                'imbalance_factor': max(len(data.control), len(data.treatment)) / min(len(data.control), len(data.treatment))
             }
         }
         
         logger.info("Statistical analysis completed successfully")
         return results
+    
+    def check_secondary_metrics(self, metrics_data: Dict[str, ExperimentData], 
+                               thresholds: Dict[str, float] = None) -> Dict[str, Any]:
+        """
+        Lightweight guardrail checking for secondary metrics
+        
+        This is NOT a full statistical analysis - just threshold checking for business risk.
+        Used to identify concerning trends that might offset primary metric gains.
+        
+        Args:
+            metrics_data: Dictionary mapping metric names to ExperimentData objects
+            thresholds: Dict of metric_name -> acceptable decline threshold (e.g., -0.05 for 5% decline)
+        
+        Returns:
+            Dictionary with simple pass/fail/warning status for each metric
+        """
+        if thresholds is None:
+            logger.warning("⚠️  NO GUARDRAIL THRESHOLDS PROVIDED - falling back to hardcoded defaults!")
+            logger.warning("Secondary metrics analysis may not match experiment design parameters")
+            thresholds = {
+                'completion_rate': -0.05,      # Alert if completion drops >5%
+                'avg_items_per_order': -0.10,  # Alert if items per order drops >10% 
+                'is_active_user': -0.02        # Alert if activity drops >2%
+            }
+            logger.info(f"Using hardcoded fallback thresholds: {thresholds}")
+        else:
+            logger.info(f"Using config-provided guardrail thresholds: {thresholds}")
+        
+        logger.info(f"Checking guardrails for {len(metrics_data)} secondary metrics")
+        
+        results = {}
+        
+        for metric_name, data in metrics_data.items():
+            logger.info(f"Checking guardrail: {metric_name}")
+            
+            try:
+                # Simple calculations - just what we need for risk assessment
+                control_mean = data.control.mean()
+                treatment_mean = data.treatment.mean()
+                
+                # Calculate effect (positive = improvement, negative = decline)
+                absolute_effect = treatment_mean - control_mean
+                relative_effect = absolute_effect / control_mean if control_mean != 0 else 0
+                
+                # Get threshold for this metric
+                threshold = thresholds.get(metric_name, -0.05)  # Default 5% decline threshold
+                
+                # Determine status
+                if relative_effect >= 0:
+                    status = "PASS"  # Any improvement is good
+                    risk_level = "LOW"
+                elif relative_effect >= threshold:
+                    status = "PASS"  # Decline but within acceptable range
+                    risk_level = "LOW" 
+                elif relative_effect >= threshold * 1.5:
+                    status = "WARNING"  # Approaching concerning levels
+                    risk_level = "MEDIUM"
+                else:
+                    status = "ALERT"  # Significant decline
+                    risk_level = "HIGH"
+                
+                results[metric_name] = {
+                    'status': status,
+                    'risk_level': risk_level,
+                    'control_mean': float(control_mean),
+                    'treatment_mean': float(treatment_mean),
+                    'absolute_effect': float(absolute_effect),
+                    'relative_effect': float(relative_effect),
+                    'relative_effect_percent': float(relative_effect * 100),
+                    'threshold': threshold,
+                    'threshold_percent': float(threshold * 100),
+                    'sample_sizes': {
+                        'control': len(data.control),
+                        'treatment': len(data.treatment)
+                    },
+                    'interpretation': self._interpret_guardrail(metric_name, status, relative_effect)
+                }
+                
+            except Exception as e:
+                logger.error(f"Failed to check guardrail {metric_name}: {e}")
+                results[metric_name] = {
+                    'status': 'ERROR',
+                    'error': str(e)
+                }
+        
+        # Overall assessment
+        statuses = [r.get('status') for r in results.values() if 'status' in r]
+        if 'ALERT' in statuses:
+            overall_status = 'ALERT'
+        elif 'WARNING' in statuses:
+            overall_status = 'WARNING'
+        elif 'ERROR' in statuses:
+            overall_status = 'ERROR'
+        else:
+            overall_status = 'PASS'
+        
+        results['_overall'] = {
+            'status': overall_status,
+            'alerts_count': statuses.count('ALERT'),
+            'warnings_count': statuses.count('WARNING'),
+            'passed_count': statuses.count('PASS'),
+            'recommendation': self._get_overall_guardrail_recommendation(overall_status, results)
+        }
+        
+        logger.info(f"Guardrail check completed: {overall_status} - {statuses.count('ALERT')} alerts, {statuses.count('WARNING')} warnings")
+        return results
+    
+    def _interpret_guardrail(self, metric_name: str, status: str, effect: float) -> str:
+        """Simple business interpretation for guardrail metrics"""
+        
+        interpretations = {
+            'completion_rate': {
+                'PASS': f"Order completion stable ({effect:+.1%})",
+                'WARNING': f"Completion rate declining ({effect:+.1%}) - monitor closely", 
+                'ALERT': f"Significant completion drop ({effect:+.1%}) - investigate immediately"
+            },
+            'avg_items_per_order': {
+                'PASS': f"Items per order stable ({effect:+.1%})",
+                'WARNING': f"Fewer items per order ({effect:+.1%}) - may impact revenue",
+                'ALERT': f"Sharp decline in basket size ({effect:+.1%}) - revenue risk"
+            },
+            'is_active_user': {
+                'PASS': f"User activity stable ({effect:+.1%})",
+                'WARNING': f"User activity declining ({effect:+.1%}) - engagement concern",
+                'ALERT': f"Significant activity drop ({effect:+.1%}) - user experience issue"
+            }
+        }
+        
+        return interpretations.get(metric_name, {}).get(status, f"Metric {status.lower()}: {effect:+.1%}")
+    
+    def _get_overall_guardrail_recommendation(self, status: str, results: Dict) -> str:
+        """Get recommendation based on overall guardrail status"""
+        
+        if status == 'ALERT':
+            return "STOP - Significant guardrail violations detected. Do not launch without investigation."
+        elif status == 'WARNING':
+            return "CAUTION - Some metrics show concerning trends. Consider extended monitoring or smaller rollout."
+        elif status == 'PASS':
+            return "PROCEED - All guardrails within acceptable bounds."
+        else:
+            return "REVIEW - Technical issues with guardrail analysis."
     
     def analyze_subgroups(self, control_data: pd.DataFrame, treatment_data: pd.DataFrame,
                          grouping_column: str, metric_column: str) -> Dict[str, Dict[str, Any]]:
@@ -185,9 +327,9 @@ class StatisticalAnalysisEngine:
             raise ValueError(f"Minimum sample size of {min_sample_size} required for each group")
         
         # Check for extreme imbalance
-        balance_ratio = min(len(data.control), len(data.treatment)) / max(len(data.control), len(data.treatment))
-        if balance_ratio < 0.1:
-            logger.warning(f"Severe group imbalance detected (ratio: {balance_ratio:.3f})")
+        imbalance_factor = max(len(data.control), len(data.treatment)) / min(len(data.control), len(data.treatment))
+        if imbalance_factor > 10.0:
+            logger.warning(f"Severe group imbalance detected (imbalance factor: {imbalance_factor:.1f}x)")
         
         # Check for missing or infinite values
         if data.control.isna().any() or data.treatment.isna().any():
