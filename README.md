@@ -7,9 +7,9 @@
 [![Statistical Analysis](https://img.shields.io/badge/Statistics-SciPy%20%7C%20StatsModels-green.svg)](https://scipy.org)
 [![Experimentation](https://img.shields.io/badge/Methodology-Causal%20Inference-orange.svg)](https://github.com)
 
-## **Mission Statement**
+## **Overview**
 
-The Flit Experiments repository embodies **data science experimentation practices**, demonstrating sophisticated statistical thinking, rigorous experimental design, and business-oriented decision frameworks. This platform showcases end-to-end experimentation flows from hypothesis formation through business impact measurement.
+Flit Experiments is an A/B testing and experimentation platform that provides statistical analysis, experimental design, and business decision frameworks. The platform includes end-to-end experimentation workflows from hypothesis formation through business impact measurement.
 
 ## **Architecture & Repository Relationship**
 
@@ -65,7 +65,7 @@ config = get_experiment_config("free_shipping_threshold_test")
 
 ## **Experimental Methodology**
 
-The experimentation framework demonstrates **advanced statistical thinking** that goes beyond basic A/B testing:
+The experimentation framework provides statistical methods that extend beyond basic A/B testing:
 
 #### **1. Hypothesis-Driven Design**
 - **Primary hypotheses** with specific effect size predictions
@@ -121,12 +121,15 @@ Sophisticated experimental designs for complex business questions:
 ## **Technical Implementation**
 
 ### **Power Analysis & Sample Size Calculation**
-```python
-# Sophisticated statistical planning
-analyzer = ExperimentPowerAnalysis()
-results = analyzer.assess_experiment_feasibility("free_shipping_threshold_test")
+```bash
+# CLI-based power analysis with detailed output
+python run_power_analysis.py free_shipping_threshold_test --verbose
 
-# Outputs: required sample size, test duration, calendar optimization (start-stop decision)
+# Historical simulation mode
+python run_power_analysis.py free_shipping_threshold_test --reference-date 2024-03-01
+
+# Save results to JSON for further analysis
+python run_power_analysis.py free_shipping_threshold_test --output results.json
 ```
 
 ### **Experiment Configuration Management**
@@ -148,17 +151,59 @@ experiments:
 
 ### **Statistical Analysis Pipeline**
 ```python
-# Production-quality statistical testing
-results = ExperimentAnalyzer.analyze_experiment(
-    experiment_name="free_shipping_threshold_test",
-    primary_metric="conversion_rate",
-    alpha=0.05,
-    multiple_testing_correction="bonferroni"
+# Complete statistical analysis with business intelligence
+from business_intelligence import run_quick_analysis
+
+results = run_quick_analysis(
+    experiment_name="free_shipping_threshold_test_v1_1_1",
+    write_to_warehouse=True  # Exports to normalized BigQuery schema
 )
 
-# Automated business recommendations
-decision = BusinessDecisionFramework.make_recommendation(results)
+# Results include:
+# - Welch's t-test, Mann-Whitney U, bootstrap confidence intervals
+# - Secondary metrics guardrail analysis  
+# - Business recommendations (LAUNCH/CONSIDER_LAUNCH/NO_LAUNCH/EXTEND_TEST)
+# - Effect size with statistical power analysis
+print(f"Decision: {results['recommendation']['decision']}")
+print(f"Effect: {results['statistical_results']['effect_sizes']['relative_lift_percent']:.1f}%")
+print(f"P-value: {results['statistical_results']['significance_tests']['welch_ttest'].p_value:.2e}")
 ```
+
+### **Secondary Metrics & BigQuery Integration**
+
+**Secondary Metrics Framework**: Lightweight guardrail checking to detect business risks:
+```python
+# Automatic secondary metrics analysis
+results = run_quick_analysis('experiment_name', write_to_warehouse=True)
+
+# Secondary metrics results
+secondary = results['secondary_metrics_analysis']
+print(f"Secondary status: {secondary['guardrail_results']['_overall']['status']}")
+print(f"Available metrics: {results['experiment_info']['secondary_metrics']}")
+```
+
+**Normalized BigQuery Schema** (Dashboard-ready):
+```sql
+-- Primary metrics table (one row per analysis)
+int_experiment_results_primary:
+  analysis_id, experiment_name, analysis_date
+  control_mean, treatment_mean, relative_lift_percent  
+  p_value, statistical_power, imbalance_factor
+  final_decision, confidence_level, risk_level
+
+-- Secondary metrics table (one row per metric per analysis)  
+int_experiment_results_secondary:
+  analysis_id (FK), secondary_metric_name
+  secondary_metric_effect_percent, secondary_metric_status
+  secondary_metric_interpretation, guardrail_threshold_used
+```
+
+**Business Decision Categories**:
+- `STRONG_LAUNCH`: High confidence + large impact
+- `LAUNCH`: Statistically significant + meaningful impact
+- `CONSIDER_LAUNCH`: Significant but small effect (cost/benefit analysis needed)
+- `EXTEND_TEST`: Promising signal, needs more data
+- `NO_LAUNCH`: No evidence of positive impact
 
 ---
 
@@ -172,30 +217,41 @@ flit-experiments/
 │   │   └── experiments.yaml         # All experiment specifications
 │   └── client.py                    # Configuration access methods
 │
-├── design/                          # Experiment Design & Planning
-│   ├── power_analysis.py           # Statistical power calculations
-│   ├── experiment_calendar.py      # Temporal planning & scheduling
-│   └── templates/                  # Experiment design templates
+├── analysis/                       # Statistical Analysis & Testing  
+│   ├── statistical_engine.py       # Statistical analysis engine (2,100+ lines)
+│   ├── business_intelligence.py    # Business insights & BigQuery integration
+│   └── run_complete_analysis.py    # Complete analysis pipeline entry point
+
+├── docs/                          # → Comprehensive Documentation Hub
+│   ├── methodology/               # Experimentation Standards & Best Practices
+│   │   └── experimentation-standards.md # Complete methodology guide
+│   ├── design/                   # Experiment Design & Configuration
+│   │   ├── power-analysis-guide.md      # Power analysis & sample size
+│   │   ├── data-engineering-standards.md # Data architecture patterns
+│   │   └── configuration-management.md   # Config versioning & validation
+│   ├── analysis/                 # Statistical Analysis Framework
+│   │   ├── framework-guide.md    # Complete usage guide for analysis
+│   │   └── experiments/          # Individual experiment reports
+│   │       ├── EXPERIMENT_ANALYSIS_*.md
+│   │       └── FUTURE_GENERALIZATION_NOTES.md
+│   ├── architecture/             # System Design & Technical Leadership
+│   │   ├── system-design.md      # Multi-repository architecture
+│   │   └── extensibility-guide.md # Plugin architecture & scaling
+│   └── operations/               # Production Operations & Quality
+│       └── quality-assurance.md  # Statistical QA & testing framework
 │
-├── analysis/                       # Statistical Analysis & Testing
-│   ├── experiment_analyzer.py      # Core statistical testing
-│   ├── effect_size_estimation.py   # Confidence intervals, bootstrapping
-│   ├── sequential_testing.py       # Early stopping analysis
-│   └── subgroup_analysis.py        # Heterogeneous treatment effects
-│
-├── business/                       # Business Intelligence & Decisions
-│   ├── decision_framework.py       # Launch/no-launch recommendations
-│   ├── roi_modeling.py            # Revenue impact calculations
-│   ├── risk_assessment.py         # Business risk evaluation
-│   └── reporting.py               # Executive summaries & dashboards
+├── design/                        # Experiment Design & Power Analysis
+│   ├── power_analysis.py          # Statistical power calculations & feasibility
+│   ├── bigquery_utils.py          # Traffic analysis and data utilities
+│   └── update_experiment_config.py # Configuration management utilities
 │
 ├── tests/                          # Testing & Validation
-│   ├── test_power_analysis.py     # Statistical calculation validation
-│   ├── test_experiment_logic.py   # Business logic testing
-│   └── test_config_validation.py  # Configuration schema validation
+│   ├── test_power_analysis.py     # Statistical calculation validation  
+│   └── test_bigquery_connection.py # BigQuery integration testing
 │
+├── run_power_analysis.py          # → Main CLI entry point for power analysis
 ├── setup.py                       # Package configuration
-├── pyproject.toml                 # Modern Python packaging
+├── pyproject.toml                 # Modern Python packaging  
 ├── requirements.txt               # Dependencies
 └── README.md                      # This file
 ```
@@ -205,10 +261,33 @@ flit-experiments/
 
 ##  **Getting Started**
 
+### **Primary Entry Points**
+
+**1. Power Analysis CLI** (Main entry point for experiment design):
+```bash
+# Check if experiment is feasible
+python run_power_analysis.py free_shipping_threshold_test --reference-date 2024-03-01
+
+# List available experiments  
+python run_power_analysis.py --list-experiments
+
+# Get detailed feasibility analysis
+python run_power_analysis.py free_shipping_threshold_test --verbose --output analysis.json
+```
+
+**2. Statistical Analysis Framework** (After data generation):
+```bash
+cd analysis/
+python run_complete_analysis.py  # Complete pipeline with exports
+
+# Or quick analysis
+python -c "from business_intelligence import run_quick_analysis; print(run_quick_analysis('experiment_name')['recommendation']['decision'])"
+```
+
 ### **Prerequisites**
-- Python 3.9+
-- Statistical analysis libraries (scipy, statsmodels, numpy, pandas)
-- Access to BigQuery for analysis data consumption
+- Python 3.11+
+- Google Cloud credentials for BigQuery access  
+- Statistical analysis libraries (installed via requirements.txt)
 - Understanding of experimental design principles
 
 ### **Installation & Setup**
@@ -298,26 +377,25 @@ Package installed correctly, and you're good to go!
 
 
 ### **Quick Start: Your First Experiment**
-```python
-# 1. Design your experiment
-from design.power_analysis import ExperimentPowerAnalysis
-
-analyzer = ExperimentPowerAnalysis()
-feasibility = analyzer.assess_experiment_feasibility("free_shipping_threshold_test")
+```bash
+# 1. Design your experiment - Power Analysis CLI
+python run_power_analysis.py free_shipping_threshold_test --reference-date 2024-03-01
 
 # 2. Generate data (in flit-data-platform)
 # Data generation consumes the experiment configuration
-# This data generation is basically a simulaion of the experiment happening. In an ordinary (non-hypothetical) business env, this is basiclaly running the experiment
+# This simulates the experiment happening in production
 
-# 3. Analyze results
-from analysis.experiment_analyzer import ExperimentAnalyzer
+# 3. Analyze results - Complete Analysis
+cd analysis/
+python run_complete_analysis.py
 
-results = ExperimentAnalyzer.analyze_experiment("free_shipping_threshold_test")
-
-# 4. Make business decision
-from business.decision_framework import BusinessDecisionFramework
-
-recommendation = BusinessDecisionFramework.make_recommendation(results)
+# Or quick analysis via Python
+python -c "
+from business_intelligence import run_quick_analysis
+results = run_quick_analysis('free_shipping_threshold_test_v1_1_1')
+print(f'Decision: {results[\"recommendation\"][\"decision\"]}')
+print(f'Effect: {results[\"statistical_results\"][\"effect_sizes\"][\"relative_lift_percent\"]:.1f}%')
+"
 ```
 
 ---
@@ -346,35 +424,53 @@ Some of the tests we plan to carry out using the flow outlined above include:
 
 ### **Data Flow Architecture**
 
-1. **Experiment Design (This Repo)**
-   ```python
-   # Define experiment in experiments.yaml
-   # Run power analysis to validate feasibility
-   # Package configuration for consumption
+**End-to-End Workflow** (Actual Implementation):
+
+1. **Power Analysis & Design** (This Repo)
+   ```bash
+   # Validate experiment feasibility
+   python run_power_analysis.py free_shipping_threshold_test --reference-date 2024-03-01
+   
+   # Output: Required sample size, test duration, feasibility status
    ```
 
-2. **Data Generation (flit-data-platform)**
+2. **Configuration Management** (This Repo)
+   ```yaml
+   # experiments.yaml - Define complete experiment specs
+   free_shipping_threshold_test_v1_1_1:
+     metrics:
+       primary: {name: orders_per_eligible_user, threshold: 0.05}
+       secondary: [{name: active_user_rate, guardrail_threshold: -0.02}]
+   ```
+
+3. **Data Generation** (flit-data-platform)
    ```python
    # Consume experiment configuration
    from flit_experiment_configs import get_experiment_config
-   config = get_experiment_config("experiment_name")
+   config = get_experiment_config("free_shipping_threshold_test_v1_1_1")
    
-   # Generate synthetic experiment data
+   # Generate synthetic experiment data in BigQuery
    generate_experiment_data(config)
    ```
 
-3. **Data Processing (flit-data-platform)**
-   ```sql
-   -- dbt models transform raw experiment data
-   -- Create analysis-ready datasets
-   -- Ensure data quality and consistency
+4. **Statistical Analysis** (This Repo)
+   ```bash
+   cd analysis/
+   python run_complete_analysis.py  # Full pipeline
+   
+   # Or programmatic analysis
+   python -c "
+   from business_intelligence import run_quick_analysis
+   results = run_quick_analysis('free_shipping_threshold_test_v1_1_1', write_to_warehouse=True)
+   print(f'Decision: {results[\"recommendation\"][\"decision\"]}')
+   "
    ```
 
-4. **Statistical Analysis (This Repo)**
-   ```python
-   # Consume processed data from BigQuery
-   # Run statistical tests and effect size estimation
-   # Generate business recommendations
+5. **Business Intelligence Export** (Automated)
+   ```sql
+   -- Normalized BigQuery tables for BI dashboards
+   SELECT * FROM int_experiment_results_primary WHERE experiment_name = 'free_shipping_threshold_test_v1_1_1';
+   SELECT * FROM int_experiment_results_secondary WHERE analysis_id = 'experiment_id_timestamp';
    ```
 
 ### **Version Management**
@@ -392,41 +488,47 @@ v2.0.0: Added checkout simplification experiment
 
 ---
 
-## **Business Impact Demonstration**
+## **Key Features**
 
-This repository showcases **real-world data science value creation**:
+The platform provides:
 
-- ** Revenue Optimization:** Quantified impact of pricing and UX changes on business metrics
-- ** Risk Management:** Systematic approach to experimental risk assessment and mitigation  
-- ** Decision Frameworks:** Clear criteria for launch/no-launch decisions based on statistical evidence
-- ** Operational Efficiency:** Streamlined experimentation processes for faster iteration cycles
-- ** Scientific Rigor:** Publication-quality statistical analysis and methodology documentation
+- **Revenue Optimization:** Quantified impact analysis of pricing and UX changes on business metrics
+- **Risk Management:** Systematic experimental risk assessment and mitigation approaches
+- **Decision Frameworks:** Statistical criteria for launch/no-launch decisions
+- **Operational Efficiency:** Streamlined experimentation processes for faster iteration
+- **Statistical Rigor:** Comprehensive statistical analysis and methodology
 
----
-
-## **Professional Development Showcase**
-
-### **Senior Data Scientist Competencies Demonstrated**
-- **Strategic Thinking:** Business-oriented experimental design and hypothesis formation
-- **Statistical Expertise:** Advanced methods beyond basic A/B testing
-- **Technical Leadership:** Architecture design for scalable experimentation platforms
-- **Communication Skills:** Executive reporting and business stakeholder management
-- **Methodological Rigor:** Reproducible research practices and scientific validity
-
-### **Industry Best Practices**
+### **Technical Capabilities**
 - **Configuration as Code:** Versioned, auditable experiment specifications
 - **Separation of Concerns:** Clean boundaries between design, data, and analysis
 - **Automated Decision Making:** Systematic frameworks for business recommendations
-- **Quality Assurance:** Comprehensive testing of statistical calculations and business logic
+- **Quality Assurance:** Testing of statistical calculations and business logic
 
 ---
 
-## **Documentation & Learning Resources**
-[These will remain empty for now, but would house the org's playbooks on the said topics]
-- **[Experiment Design Methodology](docs/experiment_design.md)** - Comprehensive guide to hypothesis formation and experimental planning
-- **[Statistical Analysis Guide](docs/statistical_analysis.md)** - Advanced methods and interpretation frameworks  
-- **[Business Decision Framework](docs/business_decisions.md)** - Criteria and processes for launch decisions
-- **[Integration Patterns](docs/integration.md)** - Architectural patterns for experimentation platforms
+## 📚 **Documentation**
+
+Our comprehensive documentation provides Principal Staff Data Scientist level technical depth across all aspects of experimentation:
+
+### **Getting Started**
+- **[Experimentation Standards](docs/methodology/experimentation-standards.md)** - Complete methodology and best practices
+- **[Analysis Framework Guide](docs/analysis/framework-guide.md)** - Statistical analysis usage and examples
+
+### **Experiment Design**
+- **[Power Analysis Guide](docs/design/power-analysis-guide.md)** - Mathematical foundations and implementation (700+ lines)
+- **[Configuration Management](docs/design/configuration-management.md)** - Versioning and validation framework
+- **[Data Engineering Standards](docs/design/data-engineering-standards.md)** - Architecture patterns and BigQuery design
+
+### **Architecture & Scaling**
+- **[System Design](docs/architecture/system-design.md)** - Multi-repository architecture and service boundaries  
+- **[Extensibility Guide](docs/architecture/extensibility-guide.md)** - Plugin architecture and domain extensions
+
+### **Operations & Quality**
+- **[Quality Assurance](docs/operations/quality-assurance.md)** - Statistical validation and testing frameworks
+
+### **Real Examples**
+- **[Experiment Analyses](docs/analysis/experiments/)** - Complete statistical analyses with business recommendations
+- **[Future Generalization Notes](docs/analysis/experiments/FUTURE_GENERALIZATION_NOTES.md)** - Framework expansion roadmap
 
 ---
 
